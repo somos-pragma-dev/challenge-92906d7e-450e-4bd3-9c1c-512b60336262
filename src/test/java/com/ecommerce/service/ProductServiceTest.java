@@ -1,61 +1,81 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dto.ProductDTO;
-import com.ecommerce.entity.Product;
+import com.ecommerce.model.Product;
 import com.ecommerce.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import java.util.Collections;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
 class ProductServiceTest {
 
-    @Autowired
-    private ProductService productService;
-
-    @MockBean
+    @Mock
     private ProductRepository productRepository;
 
-    private Product product;
-    private ProductDTO productDTO;
+    @InjectMocks
+    private ProductService productService;
 
     @BeforeEach
     void setUp() {
-        product = new Product(1L, "Product 1", 10.0);
-        productDTO = new ProductDTO(1L, "Product 1", 10.0);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
     void getAllProducts() {
-        Mockito.when(productRepository.findAll(Mockito.any())).thenReturn(Collections.singletonList(product));
-        Page<Product> productPage = new PageImpl<>(Collections.singletonList(product));
-        Mockito.when(productRepository.findAll(Mockito.any())).thenReturn(productPage);
-        Page<ProductDTO> result = productService.getAllProducts(Mockito.any());
-        Mockito.verify(productRepository).findAll(Mockito.any());
-        Mockito.verifyNoMoreInteractions(productRepository);
-    }
-
-    @Test
-    void getProductById() {
-        Mockito.when(productRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(product));
-        ProductDTO result = productService.getProductById(Mockito.anyLong());
-        Mockito.verify(productRepository).findById(Mockito.anyLong());
-        Mockito.verifyNoMoreInteractions(productRepository);
+        Product product = new Product();
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.findAll()).thenReturn(Arrays.asList(product));
+        List<Product> products = productService.getAllProducts();
+        assertEquals(1, products.size());
     }
 
     @Test
     void createProduct() {
-        Mockito.when(productRepository.save(Mockito.any())).thenReturn(product);
-        ProductDTO result = productService.createProduct(Mockito.any());
-        Mockito.verify(productRepository).save(Mockito.any());
-        Mockito.verifyNoMoreInteractions(productRepository);
+        Product product = new Product();
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.save(product)).thenReturn(product);
+        Product createdProduct = productService.createProduct(product);
+        assertNotNull(createdProduct);
+        assertEquals("Test Product", createdProduct.getName());
+    }
+
+    @Test
+    void getProductById() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Product foundProduct = productService.getProductById(1L);
+        assertNotNull(foundProduct);
+        assertEquals("Test Product", foundProduct.getName());
+    }
+
+    @Test
+    void updateProduct() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.save(product)).thenReturn(product);
+        Product updatedProduct = productService.updateProduct(1L, product);
+        assertNotNull(updatedProduct);
+        assertEquals("Test Product", updatedProduct.getName());
+    }
+
+    @Test
+    void deleteProduct() {
+        doNothing().when(productRepository).deleteById(1L);
+        productService.deleteProduct(1L);
+        verify(productRepository, times(1)).deleteById(1L);
     }
 }

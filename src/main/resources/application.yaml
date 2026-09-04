@@ -1,0 +1,7 @@
+spring:
+  mvc:
+    path: /api-docs
+  application:
+    name: Ecommerce API
+  security:
+    enabled: true

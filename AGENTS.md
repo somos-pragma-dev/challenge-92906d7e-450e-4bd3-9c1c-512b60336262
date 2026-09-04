@@ -14,19 +14,20 @@ Este bloque manda sobre los archivos adjuntos. El stack y el rol salen de AQUÍ,
 Desarrollar una API REST empresarial con Spring Boot 3 para la gestión de productos y pedidos en un e-commerce. El sistema debe incluir: arquitectura en capas con controladores REST, servicios de negocio y repositorios JPA; modelado de datos con entidades Product, Order y Customer usando relaciones OneToMany y ManyToMany con Hibernate; autenticación y autorización basada en JWT con Spring Security, incluyendo roles de ADMIN y USER con acceso diferenciado por endpoint; documentación automática con OpenAPI 3.0 y Swagger UI accesible en /api-docs; manejo centralizado de errores con @ControllerAdvice y respuestas estandarizadas en formato JSON; validación de entradas con Bean Validation usando @Valid, @NotNull y @Size; paginación y ordenamiento de resultados en los endpoints de listado usando Pageable; pruebas unitarias con JUnit 5 y Mockito cubriendo la capa de servicio al menos al 80%; pruebas de integración con @SpringBootTest verificando los flujos principales; y containerización con Docker usando Dockerfile multi-stage optimizado para producción. El desarrollador debe implementar el módulo completo desde la capa de persistencia hasta los controladores REST, aplicando principios SOLID y clean code en cada capa.
 
 ### Reto
-- Tema: Spring Boot Enterprise Architecture
-- Seniority: junior-l3
+- Tema: Arquitectura Empresarial con Spring Boot
+- Seniority: junior-l2
 - Tipo: practical
-- Título: Desarrollo de API REST para e-commerce con Spring Boot
+- Título: Diseño y Desarrollo de una API REST Empresarial
 - Tiempo estimado: 40 horas
 
 ### Fases (trabajo del HUMANO — PROHIBIDO completarlas)
 No implementes estos entregables. Dejalos como hueco pedagógico. El asistente solo materializa el proyecto arrancable para que el participante pueda trabajar.
-- Fase 1: Arquitectura y modelado de datos — objetivo: Definir la arquitectura en capas y modelar las entidades del dominio. — entregable (NO resolver): Diagrama de arquitectura y entidades modeladas con relaciones y restricciones de validación.
-- Fase 2: Autenticación y autorización — objetivo: Implementar la autenticación y autorización basada en JWT. — entregable (NO resolver): Configuración de autenticación y autorización con JWT y roles definidos.
-- Fase 3: Documentación y manejo de errores — objetivo: Generar documentación automática y manejar errores de manera centralizada. — entregable (NO resolver): Documentación generada automáticamente y manejo centralizado de errores.
-- Fase 4: Validación de entradas y paginación — objetivo: Validar las entradas y paginar los resultados. — entregable (NO resolver): Validación de entradas y paginación de resultados implementadas.
-- Fase 5: Pruebas y containerización — objetivo: Realizar pruebas unitarias e de integración y containerizar el sistema. — entregable (NO resolver): Pruebas unitarias e de integración realizadas y sistema containerizado.
+- Fase 1: Modelado de Datos — objetivo: Definir y modelar las entidades del dominio: Product, Order y Customer. — entregable (NO resolver): Diagrama de relaciones de las entidades y documentación del modelado.
+- Fase 2: Autenticación y Autorización — objetivo: Implementar la autenticación y autorización basada en JWT con roles de ADMIN y USER. — entregable (NO resolver): Configuración de Spring Security y documentación de los roles y permisos.
+- Fase 3: Documentación Automática — objetivo: Configurar la documentación automática con OpenAPI y Swagger UI. — entregable (NO resolver): Configuración de OpenAPI y Swagger UI y documentación de los endpoints.
+- Fase 4: Manejo de Errores — objetivo: Implementar el manejo centralizado de errores con @ControllerAdvice. — entregable (NO resolver): Configuración de @ControllerAdvice y documentación de las respuestas de error.
+- Fase 5: Validación de Entradas — objetivo: Implementar la validación de entradas con Bean Validation. — entregable (NO resolver): Configuración de Bean Validation y documentación de las validaciones.
+- Fase 6: Paginación y Ordenamiento — objetivo: Implementar la paginación y el ordenamiento de resultados en los endpoints de listado. — entregable (NO resolver): Configuración de paginación y ordenamiento y documentación de las opciones disponibles.
 
 Eres un asistente experto en análisis, corrección y generación de archivos de cualquier tipo:
 código fuente, documentación, hojas de cálculo, documentos Word, configuraciones, entre otros.
@@ -162,47 +163,42 @@ El participante que recibirá este proyecto los debe encontrar y resolver él mi
 
 INPUT
 Aquí está la cadena con los archivos:
-src/main/java/com/ecommerce/controller/ProductController.java
-package com.ecommerce.controller;
+// === ARCHIVO: src/main/java/com/ecommerce/api/ProductController.java ===
+package com.ecommerce.api;
 
-import com.ecommerce.dto.ProductDTO;
+import com.ecommerce.model.Product;
 import com.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductService productService;
-
     @Autowired
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
+    private ProductService productService;
 
     @GetMapping
-    public ResponseEntity<Page<ProductDTO>> getAllProducts(Pageable pageable) {
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getProductById(id));
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO) {
-        return ResponseEntity.ok(productService.createProduct(productDTO));
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
+        return ResponseEntity.ok(productService.createProduct(product));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductDTO productDTO) {
-        return ResponseEntity.ok(productService.updateProduct(id, productDTO));
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product product) {
+        return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
     @DeleteMapping("/{id}")
@@ -215,349 +211,229 @@ public class ProductController {
 // === ARCHIVO: src/main/java/com/ecommerce/service/ProductService.java ===
 package com.ecommerce.service;
 
-import com.ecommerce.dto.ProductDTO;
-import com.ecommerce.entity.Product;
+import com.ecommerce.model.Product;
 import com.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import javax.transaction.Transactional;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class ProductService {
 
-    private final ProductRepository productRepository;
-
     @Autowired
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    private ProductRepository productRepository;
+
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
-    public Page<ProductDTO> getAllProducts(Pageable pageable) {
-        Page<Product> products = productRepository.findAll(pageable);
-        return products.map(this::convertToDTO);
+    public Product createProduct(Product product) {
+        return productRepository.save(product);
     }
 
-    public ProductDTO getProductById(Long id) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
-        return convertToDTO(product);
+    public Product getProductById(Long id) {
+        Optional<Product> product = productRepository.findById(id);
+        return product.orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
-    @Transactional
-    public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = convertToEntity(productDTO);
-        product = productRepository.save(product);
-        return convertToDTO(product);
+    public Product updateProduct(Long id, Product product) {
+        if (!productRepository.existsById(id)) {
+            throw new RuntimeException("Product not found");
+        }
+        product.setId(id);
+        return productRepository.save(product);
     }
 
-    @Transactional
-    public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
-        product.setName(productDTO.getName());
-        product.setPrice(productDTO.getPrice());
-        product = productRepository.save(product);
-        return convertToDTO(product);
-    }
-
-    @Transactional
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
-    }
-
-    private ProductDTO convertToDTO(Product product) {
-        return new ProductDTO(product.getId(), product.getName(), product.getPrice());
-    }
-
-    private Product convertToEntity(ProductDTO productDTO) {
-        return new Product(productDTO.getId(), productDTO.getName(), productDTO.getPrice());
     }
 }
 
 // === ARCHIVO: src/main/java/com/ecommerce/repository/ProductRepository.java ===
 package com.ecommerce.repository;
 
-import com.ecommerce.entity.Product;
+import com.ecommerce.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
-}
+public interface ProductRepository extends JpaRepository<Product, Long> {}
 
-// === ARCHIVO: src/main/resources/config/application.yml ===
+// === ARCHIVO: src/main/resources/application.properties ===
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+
+// === ARCHIVO: src/main/resources/application.yaml ===
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+  mvc:
+    path: /api-docs
+  application:
+    name: Ecommerce API
   security:
-    user:
-      name: user
-      password: password
-  openApi:
-    title: Ecommerce API
-    description: API for managing products and orders
-    version: 1.0
+    enabled: true
 
+// === ARCHIVO: src/main/java/com/ecommerce/security/SecurityConfig.java ===
+package com.ecommerce.security;
 
-// === ARCHIVO: src/test/java/com/ecommerce/controller/ProductControllerTest.java ===
-package com.ecommerce.controller;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
-import com.ecommerce.dto.ProductDTO;
-import com.ecommerce.service.ProductService;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import java.util.Collections;
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-@WebMvcTest(ProductController.class)
-class ProductControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private ProductService productService;
-
-    @Test
-    void getAllProducts() throws Exception {
-        Mockito.when(productService.getAllProducts(Mockito.any())).thenReturn(Collections.emptyList());
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/products"))
-               .andExpect(MockMvcResultMatchers.status().isOk());
-    }
-
-    @Test
-    void getProductById() throws Exception {
-        ProductDTO productDTO = new ProductDTO(1L, "Product 1", 10.0);
-        Mockito.when(productService.getProductById(Mockito.anyLong())).thenReturn(productDTO);
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/products/1"))
-               .andExpect(MockMvcResultMatchers.status().isOk());
-    }
-
-    @Test
-    void createProduct() throws Exception {
-        ProductDTO productDTO = new ProductDTO(null, "Product 1", 10.0);
-        Mockito.when(productService.createProduct(Mockito.any())).thenReturn(productDTO);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/products")
-               .contentType("application/json")
-               .content("{\"name\":\"Product 1\",\"price\":10.0}"))
-               .andExpect(MockMvcResultMatchers.status().isOk());
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+           .authorizeRequests()
+           .antMatchers("/api/products").hasRole("ADMIN")
+           .antMatchers("/api/products/{id}").hasRole("USER")
+           .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 }
 
-// === ARCHIVO: src/test/java/com/ecommerce/service/ProductServiceTest.java ===
-package com.ecommerce.service;
+// === ARCHIVO: src/main/java/com/ecommerce/exception/GlobalExceptionHandler.java ===
+package com.ecommerce.exception;
 
-import com.ecommerce.dto.ProductDTO;
-import com.ecommerce.entity.Product;
-import com.ecommerce.repository.ProductRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import java.util.Collections;
-import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
-@SpringBootTest
-class ProductServiceTest {
+@ControllerAdvice
+public class GlobalExceptionHandler {
 
-    @Autowired
-    private ProductService productService;
-
-    @MockBean
-    private ProductRepository productRepository;
-
-    private Product product;
-    private ProductDTO productDTO;
-
-    @BeforeEach
-    void setUp() {
-        product = new Product(1L, "Product 1", 10.0);
-        productDTO = new ProductDTO(1L, "Product 1", 10.0);
-    }
-
-    @Test
-    void getAllProducts() {
-        Mockito.when(productRepository.findAll(Mockito.any())).thenReturn(Collections.singletonList(product));
-        Page<Product> productPage = new PageImpl<>(Collections.singletonList(product));
-        Mockito.when(productRepository.findAll(Mockito.any())).thenReturn(productPage);
-        Page<ProductDTO> result = productService.getAllProducts(Mockito.any());
-        Mockito.verify(productRepository).findAll(Mockito.any());
-        Mockito.verifyNoMoreInteractions(productRepository);
-    }
-
-    @Test
-    void getProductById() {
-        Mockito.when(productRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(product));
-        ProductDTO result = productService.getProductById(Mockito.anyLong());
-        Mockito.verify(productRepository).findById(Mockito.anyLong());
-        Mockito.verifyNoMoreInteractions(productRepository);
-    }
-
-    @Test
-    void createProduct() {
-        Mockito.when(productRepository.save(Mockito.any())).thenReturn(product);
-        ProductDTO result = productService.createProduct(Mockito.any());
-        Mockito.verify(productRepository).save(Mockito.any());
-        Mockito.verifyNoMoreInteractions(productRepository);
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }
 
-// === ARCHIVO: src/test/resources/application-test.yml ===
-spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-  security:
-    user:
-      name: user
-      password: password
+// === ARCHIVO: src/main/java/com/ecommerce/model/Product.java ===
+package com.ecommerce.model;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Entity
+@Table(name = "products")
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String name;
+
+    @NotNull
+    private Double price;
+
+    // Getters and setters
+}
 
 // === ARCHIVO: Dockerfile ===
 FROM openjdk:21-jdk-alpine AS build
 WORKDIR /app
 COPY..
-RUN./mvnw clean package -DskipTests
+RUN./mvnw package -DskipTests
 
 FROM openjdk:21-jdk-alpine AS runtime
 WORKDIR /app
-COPY --from=build /app/target/ecommerce-0.0.1-SNAPSHOT.jar /app/ecommerce.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/ecommerce.jar"]
+COPY --from=build /app/target/ecommerce-api-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
 
-// === ARCHIVO:.dockerignore ===
-target/
-*.jar
-*.war
-*.ear
-*.class
-*.log
+// === ARCHIVO: src/test/java/com/ecommerce/service/ProductServiceTest.java ===
+package com.ecommerce.service;
 
-// === ARCHIVO: src/main/resources/openapi.yaml ===
-openapi: 3.0.1
-info:
-  title: Ecommerce API
-  description: API for managing products and orders
-  version: 1.0
-paths:
-  /api/products:
-    get:
-      summary: Get all products
-      operationId: getAllProducts
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductDTO'
-    post:
-      summary: Create a product
-      operationId: createProduct
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductDTO'
-      responses:
-        '201':
-          description: Product created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-  /api/products/{id}:
-    get:
-      summary: Get product by ID
-      operationId: getProductById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-    put:
-      summary: Update product by ID
-      operationId: updateProduct
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductDTO'
-      responses:
-        '200':
-          description: Product updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-    delete:
-      summary: Delete product by ID
-      operationId: deleteProduct
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Product deleted
-components:
-  schemas:
-    ProductDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        price:
-          type: number
-      required:
-        - name
-        - price
+import com.ecommerce.model.Product;
+import com.ecommerce.repository.ProductRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class ProductServiceTest {
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @InjectMocks
+    private ProductService productService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    void getAllProducts() {
+        Product product = new Product();
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.findAll()).thenReturn(Arrays.asList(product));
+        List<Product> products = productService.getAllProducts();
+        assertEquals(1, products.size());
+    }
+
+    @Test
+    void createProduct() {
+        Product product = new Product();
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.save(product)).thenReturn(product);
+        Product createdProduct = productService.createProduct(product);
+        assertNotNull(createdProduct);
+        assertEquals("Test Product", createdProduct.getName());
+    }
+
+    @Test
+    void getProductById() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Product foundProduct = productService.getProductById(1L);
+        assertNotNull(foundProduct);
+        assertEquals("Test Product", foundProduct.getName());
+    }
+
+    @Test
+    void updateProduct() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setPrice(100.0);
+        when(productRepository.existsById(1L)).thenReturn(true);
+        when(productRepository.save(product)).thenReturn(product);
+        Product updatedProduct = productService.updateProduct(1L, product);
+        assertNotNull(updatedProduct);
+        assertEquals("Test Product", updatedProduct.getName());
+    }
+
+    @Test
+    void deleteProduct() {
+        doNothing().when(productRepository).deleteById(1L);
+        productService.deleteProduct(1L);
+        verify(productRepository, times(1)).deleteById(1L);
+    }
+}
 
 ```
